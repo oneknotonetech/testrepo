@@ -1,4 +1,4 @@
-import { UserSubmission, UploadedImage } from '../types';
+import { UserSubmission, UploadedImage, TableRowData } from '../types';
 
 const DB_NAME = 'interiorDesignDB';
 const DB_VERSION = 1;
@@ -8,7 +8,18 @@ const STORES = {
   SUBMISSIONS: 'submissions',
   USER_ROWS: 'userRows',
   IMAGES: 'images'
-};
+} as const;
+
+// Type for store names
+type StoreNames = typeof STORES[keyof typeof STORES];
+
+// Type for generic database items with id
+interface DatabaseItem {
+  id: string | number;
+}
+
+// Type for update operations
+type UpdateData<T> = Partial<T>;
 
 class IndexedDBService {
   private db: IDBDatabase | null = null;
@@ -54,19 +65,19 @@ class IndexedDBService {
 
   // Submissions CRUD operations
   async addSubmission(submission: UserSubmission): Promise<void> {
-    return this.addItem(STORES.SUBMISSIONS, submission);
+    return this.addItem<UserSubmission>(STORES.SUBMISSIONS, submission);
   }
 
   async getSubmission(id: string): Promise<UserSubmission | null> {
-    return this.getItem(STORES.SUBMISSIONS, id);
+    return this.getItem<UserSubmission>(STORES.SUBMISSIONS, id);
   }
 
   async getAllSubmissions(): Promise<UserSubmission[]> {
-    return this.getAllItems(STORES.SUBMISSIONS);
+    return this.getAllItems<UserSubmission>(STORES.SUBMISSIONS);
   }
 
-  async updateSubmission(id: string, updates: Partial<UserSubmission>): Promise<void> {
-    return this.updateItem(STORES.SUBMISSIONS, id, updates);
+  async updateSubmission(id: string, updates: UpdateData<UserSubmission>): Promise<void> {
+    return this.updateItem<UserSubmission>(STORES.SUBMISSIONS, id, updates);
   }
 
   async deleteSubmission(id: string): Promise<void> {
@@ -74,20 +85,20 @@ class IndexedDBService {
   }
 
   // UserRows CRUD operations
-  async addUserRow(row: any): Promise<void> {
-    return this.addItem(STORES.USER_ROWS, row);
+  async addUserRow(row: TableRowData): Promise<void> {
+    return this.addItem<TableRowData>(STORES.USER_ROWS, row);
   }
 
-  async getUserRow(id: number): Promise<any> {
-    return this.getItem(STORES.USER_ROWS, id);
+  async getUserRow(id: number): Promise<TableRowData | null> {
+    return this.getItem<TableRowData>(STORES.USER_ROWS, id);
   }
 
-  async getAllUserRows(): Promise<any[]> {
-    return this.getAllItems(STORES.USER_ROWS);
+  async getAllUserRows(): Promise<TableRowData[]> {
+    return this.getAllItems<TableRowData>(STORES.USER_ROWS);
   }
 
-  async updateUserRow(id: number, updates: any): Promise<void> {
-    return this.updateItem(STORES.USER_ROWS, id, updates);
+  async updateUserRow(id: number, updates: UpdateData<TableRowData>): Promise<void> {
+    return this.updateItem<TableRowData>(STORES.USER_ROWS, id, updates);
   }
 
   async deleteUserRow(id: number): Promise<void> {
@@ -96,15 +107,15 @@ class IndexedDBService {
 
   // Images CRUD operations
   async addImage(image: UploadedImage): Promise<void> {
-    return this.addItem(STORES.IMAGES, image);
+    return this.addItem<UploadedImage>(STORES.IMAGES, image);
   }
 
   async getImage(id: string): Promise<UploadedImage | null> {
-    return this.getItem(STORES.IMAGES, id);
+    return this.getItem<UploadedImage>(STORES.IMAGES, id);
   }
 
   async getImagesBySubmissionId(submissionId: string): Promise<UploadedImage[]> {
-    return this.getItemsByIndex(STORES.IMAGES, 'submissionId', submissionId);
+    return this.getItemsByIndex<UploadedImage>(STORES.IMAGES, 'submissionId', submissionId);
   }
 
   async deleteImage(id: string): Promise<void> {
@@ -112,7 +123,7 @@ class IndexedDBService {
   }
 
   // Generic CRUD operations
-  private async addItem(storeName: string, item: any): Promise<void> {
+  private async addItem<T extends DatabaseItem>(storeName: StoreNames, item: T): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('Database not initialized'));
@@ -128,7 +139,7 @@ class IndexedDBService {
     });
   }
 
-  private async getItem(storeName: string, id: string | number): Promise<any> {
+  private async getItem<T>(storeName: StoreNames, id: string | number): Promise<T | null> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('Database not initialized'));
@@ -144,7 +155,7 @@ class IndexedDBService {
     });
   }
 
-  private async getAllItems(storeName: string): Promise<any[]> {
+  private async getAllItems<T>(storeName: StoreNames): Promise<T[]> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('Database not initialized'));
@@ -160,7 +171,11 @@ class IndexedDBService {
     });
   }
 
-  private async updateItem(storeName: string, id: string | number, updates: any): Promise<void> {
+  private async updateItem<T extends DatabaseItem>(
+    storeName: StoreNames, 
+    id: string | number, 
+    updates: UpdateData<T>
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('Database not initialized'));
@@ -187,7 +202,7 @@ class IndexedDBService {
     });
   }
 
-  private async deleteItem(storeName: string, id: string | number): Promise<void> {
+  private async deleteItem(storeName: StoreNames, id: string | number): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('Database not initialized'));
@@ -203,7 +218,11 @@ class IndexedDBService {
     });
   }
 
-  private async getItemsByIndex(storeName: string, indexName: string, value: any): Promise<any[]> {
+  private async getItemsByIndex<T>(
+    storeName: StoreNames, 
+    indexName: string, 
+    value: string | number
+  ): Promise<T[]> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('Database not initialized'));
@@ -219,7 +238,55 @@ class IndexedDBService {
       request.onerror = () => reject(new Error(`Failed to get items by index from ${storeName}`));
     });
   }
+
+  // Utility method to clear all data (useful for development/testing)
+  async clearAllData(): Promise<void> {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    const storeNames = Object.values(STORES);
+    const transaction = this.db.transaction(storeNames, 'readwrite');
+
+    return new Promise((resolve, reject) => {
+      const clearPromises = storeNames.map(storeName => {
+        return new Promise<void>((storeResolve, storeReject) => {
+          const store = transaction.objectStore(storeName);
+          const request = store.clear();
+          request.onsuccess = () => storeResolve();
+          request.onerror = () => storeReject(new Error(`Failed to clear ${storeName}`));
+        });
+      });
+
+      Promise.all(clearPromises)
+        .then(() => resolve())
+        .catch(reject);
+    });
+  }
+
+  // Method to get database size (useful for monitoring)
+  async getDatabaseSize(): Promise<{ [key: string]: number }> {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    const sizes: { [key: string]: number } = {};
+    const storeNames = Object.values(STORES);
+
+    for (const storeName of storeNames) {
+      const transaction = this.db.transaction(storeName, 'readonly');
+      const store = transaction.objectStore(storeName);
+      const countRequest = store.count();
+      
+      sizes[storeName] = await new Promise((resolve, reject) => {
+        countRequest.onsuccess = () => resolve(countRequest.result);
+        countRequest.onerror = () => reject(new Error(`Failed to count items in ${storeName}`));
+      });
+    }
+
+    return sizes;
+  }
 }
 
 // Create and export a singleton instance
-export const indexedDBService = new IndexedDBService(); 
+export const indexedDBService = new IndexedDBService();
