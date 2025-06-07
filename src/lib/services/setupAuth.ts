@@ -1,4 +1,4 @@
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { app } from './firebaseClient';
 
 const auth = getAuth(app);
@@ -14,7 +14,7 @@ export const setupAdminUser = async () => {
     return userCredential.user;
   } catch (error: unknown) {
     // If user already exists, that's fine
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as any).code === 'auth/email-already-in-use') {
+    if (error instanceof Error && 'code' in error && (error as AuthError).code === 'auth/email-already-in-use') {
       console.log('Admin user already exists');
       return null;
     }

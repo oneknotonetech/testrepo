@@ -1,4 +1,4 @@
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, User, AuthError } from 'firebase/auth';
 import { app } from './firebaseClient';
 
 const auth = getAuth(app);
@@ -18,7 +18,7 @@ export const initializeAuth = async () => {
     return currentUser;
   } catch (error: unknown) {
     console.error('Auto login failed:', error);
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as any).code === 'auth/invalid-credential') {
+    if (error instanceof Error && 'code' in error && (error as AuthError).code === 'auth/invalid-credential') {
       console.log('Invalid credentials, attempting to create user...');
       return null;
     }

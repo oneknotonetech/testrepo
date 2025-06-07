@@ -27,7 +27,10 @@ export const deleteSubmission = async (id: string) => {
 
 export const listenToSubmissions = (callback: (data: UserSubmission[]) => void) => {
   return onSnapshot(collection(db, 'submissions'), snapshot => {
-    const results: UserSubmission[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserSubmission));
+    const results: UserSubmission[] = snapshot.docs.map(doc => {
+      const data = doc.data() as Omit<UserSubmission, 'id'>;
+      return { id: doc.id, ...data } as UserSubmission;
+    });
     callback(results);
   });
 };
