@@ -159,34 +159,21 @@ const TokenCounter: React.FC<{
 // Updated downloadImage function
 const downloadImage = async (url: string, filename: string) => {
   try {
-    // Ensure URL is properly formatted
-    const downloadUrl = url.startsWith('http') ? url : `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o/${encodeURIComponent(url)}?alt=media`;
+    // For Firebase Storage URLs, we can download directly
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
     
-    const response = await fetch(downloadUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.statusText}`);
-    }
-
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log(`Download initiated for: ${filename}`);
   } catch (error) {
     console.error('Error downloading image:', error);
-    alert('Failed to download image. Please try again.');
+    // Fallback: open in new tab for manual download
+    window.open(url, '_blank');
   }
 };
 

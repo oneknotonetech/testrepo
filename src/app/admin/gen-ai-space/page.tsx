@@ -19,34 +19,11 @@ import Image from 'next/image';
 // Updated downloadImage function
 const downloadImage = async (url: string, filename: string) => {
   try {
-    // Ensure URL is properly formatted
-    const downloadUrl = url.startsWith('http') ? url : `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o/${encodeURIComponent(url)}?alt=media`;
-    
-    const response = await fetch(downloadUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.statusText}`);
-    }
-
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    // Open image in new tab
+    window.open(url, '_blank');
+    console.log(`Opening image in new tab: ${filename}`);
   } catch (error) {
-    console.error('Error downloading image:', error);
-    alert('Failed to download image. Please try again.');
+    console.error('Error opening image:', error);
   }
 };
 
@@ -714,3 +691,4 @@ const AdminDashboard: React.FC = () => {
 };
 
 export default AdminDashboard;
+
