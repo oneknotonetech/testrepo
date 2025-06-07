@@ -560,7 +560,7 @@ function UserRow({
                                       <Button
                                         size="icon"
                                         variant="ghost"
-                                        className="h-8 w-8 bg-white/90 hover:bg-white text-gray-700 hover:text-black"
+                                        className="h-8 w-8 bg-white/90 hover: text-gray-700 hover:text-black"
                                         onClick={() => setPreviewImage(submission.generatedImage!)}
                                       >
                                         <Eye className="w-4 h-4" />
@@ -568,7 +568,7 @@ function UserRow({
                                       <Button
                                         size="icon"
                                         variant="ghost"
-                                        className="h-8 w-8 bg-white/90 hover:bg-white text-gray-700 hover:text-black"
+                                        className="h-8 w-8 bg-white/90 hover: text-gray-700 hover:text-black"
                                         onClick={() => downloadImage(submission.generatedImage!, `ai-design-row-${row.id}.jpg`)}
                                       >
                                         <Download className="w-4 h-4" />

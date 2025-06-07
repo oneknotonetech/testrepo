@@ -213,7 +213,7 @@ function AdminSubmissionCard({
                       height={200}
                       className="w-full h-24 object-cover rounded-lg"
                     />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg" />
+                    <div className="absolute inset-0  bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg" />
                     <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         size="icon"
@@ -252,7 +252,7 @@ function AdminSubmissionCard({
                       height={200}
                       className="w-full h-24 object-cover rounded-lg"
                     />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg" />
+                    <div className="absolute inset-0  bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg" />
                     <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         size="icon"
@@ -300,7 +300,7 @@ function AdminSubmissionCard({
                 height={300}
                 className="w-full h-48 object-cover rounded-lg"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg" />
+              <div className="absolute inset-0  bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg" />
               <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button
                   size="icon"
