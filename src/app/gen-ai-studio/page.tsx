@@ -548,9 +548,11 @@ function UserRow({
                                   className="space-y-3"
                                 >
                                   <div className="relative group">
-                                    <img
+                                    <Image
                                       src={submission.generatedImage}
                                       alt="AI Generated Design"
+                                      width={400}
+                                      height={200}
                                       className="w-full h-32 object-cover rounded-lg shadow-md"
                                     />
                 <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-lg" />
@@ -596,10 +598,12 @@ function UserRow({
             <div className="flex gap-2 items-center min-h-[128px]">
               {row.inspirationImages.concat(row.areaImages).length > 0 ? (
                 row.inspirationImages.concat(row.areaImages).slice(0, 2).map((img) => (
-                  <img
+                  <Image
                     key={img.id}
                     src={inspirationImageUrls[img.id] || areaImageUrls[img.id]}
-                    alt={img.name}
+                    alt={img.name || 'Uploaded image'}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 object-cover rounded shadow"
                   />
                 ))

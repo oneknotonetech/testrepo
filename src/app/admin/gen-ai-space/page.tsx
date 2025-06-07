@@ -199,46 +199,38 @@ function AdminSubmissionCard({
                     onClick={handleDownloadAllImages}
                   >
                     <Download className="w-3 h-3 mr-1" />
-                    All
+                    Download All
                   </Button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-1">
-                {submission.inspirationImages.slice(0, 4).map((image) => (
+              <div className="grid grid-cols-2 gap-2">
+                {submission.inspirationImages.map((image) => (
                   <div key={image.id} className="relative group">
                     <Image
                       src={image.url}
                       alt={image.name || 'Inspiration image'}
-                      width={100}
-                      height={48}
-                      className="w-full h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => setPreviewImage(image.url)}
+                      width={200}
+                      height={200}
+                      className="w-full h-24 object-cover rounded-lg"
                     />
-                    <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded flex items-center justify-center">
-                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 text-white hover:bg-white/20"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewImage(image.url);
-                          }}
-                        >
-                          <Eye className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 text-white hover:bg-white/20"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            downloadImage(image.url, image.name || 'inspiration.jpg');
-                          }}
-                        >
-                          <Download className="w-3 h-3" />
-                        </Button>
-                      </div>
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg" />
+                    <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 bg-white/90 hover:bg-white text-gray-700 hover:text-black"
+                        onClick={() => setPreviewImage(image.url)}
+                      >
+                        <Eye className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 bg-white/90 hover:bg-white text-gray-700 hover:text-black"
+                        onClick={() => downloadImage(image.url, image.name || 'inspiration.jpg')}
+                      >
+                        <Download className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -249,53 +241,35 @@ function AdminSubmissionCard({
                 <p className="text-xs text-gray-500 font-medium">
                   Area ({submission.areaImages.length})
                 </p>
-                {submission.areaImages.length > 0 && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleDownloadAllImages}
-                  >
-                    <Download className="w-3 h-3 mr-1" />
-                    All
-                  </Button>
-                )}
               </div>
-              <div className="grid grid-cols-2 gap-1">
-                {submission.areaImages.slice(0, 4).map((image) => (
+              <div className="grid grid-cols-2 gap-2">
+                {submission.areaImages.map((image) => (
                   <div key={image.id} className="relative group">
                     <Image
                       src={image.url}
                       alt={image.name || 'Area image'}
-                      width={100}
-                      height={48}
-                      className="w-full h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => setPreviewImage(image.url)}
+                      width={200}
+                      height={200}
+                      className="w-full h-24 object-cover rounded-lg"
                     />
-                    <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded flex items-center justify-center">
-                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 text-white hover:bg-white/20"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewImage(image.url);
-                          }}
-                        >
-                          <Eye className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 text-white hover:bg-white/20"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            downloadImage(image.url, image.name || 'area.jpg');
-                          }}
-                        >
-                          <Download className="w-3 h-3" />
-                        </Button>
-                      </div>
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg" />
+                    <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 bg-white/90 hover:bg-white text-gray-700 hover:text-black"
+                        onClick={() => setPreviewImage(image.url)}
+                      >
+                        <Eye className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 bg-white/90 hover:bg-white text-gray-700 hover:text-black"
+                        onClick={() => downloadImage(image.url, image.name || 'area.jpg')}
+                      >
+                        <Download className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
                 ))}

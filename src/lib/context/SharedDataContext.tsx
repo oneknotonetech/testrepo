@@ -33,24 +33,36 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       };
       await createSubmission(submission);
-    } catch (err) {
-      setError(err as Error);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err);
+      } else {
+        setError(new Error('An unknown error occurred'));
+      }
     }
   };
 
   const updateSubmission = async (id: string, updates: Partial<UserSubmission>) => {
     try {
       await updateFirebaseSubmission(id, updates);
-    } catch (err) {
-      setError(err as Error);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err);
+      } else {
+        setError(new Error('An unknown error occurred'));
+      }
     }
   };
 
   const deleteSubmission = async (id: string) => {
     try {
       await deleteFirebaseSubmission(id);
-    } catch (err) {
-      setError(err as Error);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err);
+      } else {
+        setError(new Error('An unknown error occurred'));
+      }
     }
   };
 
