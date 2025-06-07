@@ -292,32 +292,32 @@ function AdminSubmissionCard({
 
           {/* Generated Result */}
           {submission.status === 'completed' && submission.generatedImage && (
-            <div className="mb-4">
-              <p className="text-xs text-gray-500 mb-2 font-medium">Generated AI Result</p>
-              <div className="relative group">
-                <Image
-                  src={submission.generatedImage}
-                  alt="Generated result"
-                  width={400}
-                  height={96}
-                  className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => submission.generatedImage && setPreviewImage(submission.generatedImage)}
-                />
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 bg-white/90 hover:bg-white text-gray-700 hover:text-black"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (submission.generatedImage) {
-                        downloadImage(submission.generatedImage, `generated_result_row_${submission.rowId}.jpg`);
-                      }
-                    }}
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                </div>
+            <div className="relative group">
+              <Image
+                src={submission.generatedImage}
+                alt="Generated AI Result"
+                width={400}
+                height={300}
+                className="w-full h-48 object-cover rounded-lg"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg" />
+              <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 bg-white/90 hover:bg-white text-gray-700 hover:text-black"
+                  onClick={() => setPreviewImage(submission.generatedImage!)}
+                >
+                  <Eye className="w-3 h-3" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 bg-white/90 hover:bg-white text-gray-700 hover:text-black"
+                  onClick={() => downloadImage(submission.generatedImage!, `generated_result_row_${submission.rowId}.jpg`)}
+                >
+                  <Download className="w-3 h-3" />
+                </Button>
               </div>
             </div>
           )}
