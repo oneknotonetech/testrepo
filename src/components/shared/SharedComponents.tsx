@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UserSubmission } from '../../lib/types';
+import Image from 'next/image';
 
 // Preview Modal Component
 interface PreviewModalProps {
@@ -36,11 +37,16 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ imageUrl, onClose })
           >
             <X className="w-5 h-5" />
           </Button>
-          <img
-            src={imageUrl}
-            alt="Preview"
-            className="w-full h-auto object-contain"
-          />
+          <div className="relative w-full h-[80vh]">
+            <Image
+              src={imageUrl}
+              alt="Preview"
+              fill
+              className="object-contain"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+              priority
+            />
+          </div>
         </CardContent>
       </Card>
     </motion.div>
