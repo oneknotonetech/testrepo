@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Heart, Star, Package, ShoppingBag } from "lucide-react";
 import {
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 // Define TypeScript types
 type BundleStyle = "Rustic" | "Modern" | "Contemporary";
@@ -68,9 +69,11 @@ const ProductCard: React.FC<{ product: Product; index: number }> = ({ product, i
       className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200"
     >
       <div className="relative">
-        <img 
+        <Image 
           src={product.image} 
           alt={product.name}
+          width={400}
+          height={192}
           className="w-full h-48 object-cover"
         />
         {discountPercentage > 0 && (

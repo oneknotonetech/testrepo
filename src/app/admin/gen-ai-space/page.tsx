@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, Eye, Download, RefreshCw, X, AlertCircle, CheckCircle,
@@ -14,6 +14,7 @@ import { useSharedData } from '../../../lib/context/SharedDataContext';
 import { PreviewModal, ProgressBar, StatusBadge, PriorityBadge } from '../../../components/shared/SharedComponents';
 import { UserSubmission } from '../../../lib/types';
 import { uploadImageToStorage } from '../../../lib/firebaseHelpers';
+import Image from 'next/image';
 
 // Updated downloadImage function
 const downloadImage = async (url: string, filename: string) => {
@@ -205,9 +206,11 @@ function AdminSubmissionCard({
               <div className="grid grid-cols-2 gap-1">
                 {submission.inspirationImages.slice(0, 4).map((image) => (
                   <div key={image.id} className="relative group">
-                    <img
+                    <Image
                       src={image.url}
                       alt={image.name || 'Inspiration image'}
+                      width={100}
+                      height={48}
                       className="w-full h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={() => setPreviewImage(image.url)}
                     />
@@ -260,9 +263,11 @@ function AdminSubmissionCard({
               <div className="grid grid-cols-2 gap-1">
                 {submission.areaImages.slice(0, 4).map((image) => (
                   <div key={image.id} className="relative group">
-                    <img
+                    <Image
                       src={image.url}
                       alt={image.name || 'Area image'}
+                      width={100}
+                      height={48}
                       className="w-full h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={() => setPreviewImage(image.url)}
                     />
@@ -316,9 +321,11 @@ function AdminSubmissionCard({
             <div className="mb-4">
               <p className="text-xs text-gray-500 mb-2 font-medium">Generated AI Result</p>
               <div className="relative group">
-                <img
+                <Image
                   src={submission.generatedImage}
                   alt="Generated result"
+                  width={400}
+                  height={96}
                   className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => submission.generatedImage && setPreviewImage(submission.generatedImage)}
                 />

@@ -7,7 +7,15 @@ import {
   deleteSubmission as deleteFirebaseSubmission, listenToSubmissions
 } from '../hooks/firebaseHelpers';
 
-const SharedDataContext = createContext<any>(undefined);
+interface SharedDataContextType {
+  submissions: UserSubmission[];
+  addSubmission: (data: Omit<UserSubmission, 'id'>) => Promise<void>;
+  updateSubmission: (id: string, updates: Partial<UserSubmission>) => Promise<void>;
+  deleteSubmission: (id: string) => Promise<void>;
+  error: Error | null;
+}
+
+const SharedDataContext = createContext<SharedDataContextType | undefined>(undefined);
 
 export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [submissions, setSubmissions] = useState<UserSubmission[]>([]);

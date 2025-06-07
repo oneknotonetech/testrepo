@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 const DesignThemesPage = () => {
   const [currentThemeIndex] = useState(0);
@@ -195,9 +196,11 @@ const DesignThemesPage = () => {
                       <Card className={`bg-gray-50 rounded-2xl p-6 h-full transition-all duration-300 ${
                         ratedThemes.has(index) ? 'ring-2 ring-green-500 bg-green-50' : 'hover:shadow-lg'
                       }`}>
-                        <img 
+                        <Image 
                           src={theme.image} 
                           alt={theme.name}
+                          width={400}
+                          height={192}
                           className="w-full h-48 object-cover rounded-xl mb-4"
                         />
                         <div className="text-lg font-bold text-gray-900 mb-2">{theme.name}</div>

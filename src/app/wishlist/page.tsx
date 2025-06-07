@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Trash2 } from 'lucide-react';
 import { inspirationItems as allInspirations } from '@/data/inspirationItems';
+import Image from 'next/image';
 
 const WISHLIST_KEY = 'wishlist';
 
@@ -139,11 +140,13 @@ export default function WishlistPage() {
                 >
                   {/* Image Container */}
                   <div className="relative group bg-gray-100">
-                    <img
+                    <Image
                       src={item.imageUrl || (item.images && item.images[0]) || '/vercel.svg'}
                       alt={item.title}
+                      width={400}
+                      height={192}
                       className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/vercel.svg'; }}
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/vercel.svg'; }}
                     />
                     <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300" />
                     {/* Remove Button */}

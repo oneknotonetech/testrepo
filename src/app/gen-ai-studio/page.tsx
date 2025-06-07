@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Plus, Upload, Sparkles, Image, Trash2, Eye, Download, RefreshCw, AlertCircle,
+  Plus, Upload, Sparkles, Trash2, Eye, Download, RefreshCw, AlertCircle,
   User, Settings2, LogOut, Coins, CreditCard
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useSharedData } from '@/lib/context/SharedDataContext';
 import { PreviewModal, ProgressBar, StatusBadge } from '../../components/shared/SharedComponents';
 import { TableRowData, UploadedImage, UserSubmission } from '../../lib/types';
 import { uploadImageToStorage } from '../../lib/firebaseHelpers';
+import Image from 'next/image';
 
 const LOCAL_STORAGE_KEY = 'ai-design-user-rows';
 
@@ -327,9 +328,11 @@ function UserRow({
                                       exit={{ opacity: 0, scale: 0.8 }}
                                       className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden"
                                     >
-                                      <img
-                    src={inspirationImageUrls[image.id]}
+                                      <Image
+                                        src={inspirationImageUrls[image.id]}
                                         alt={image.name}
+                                        width={100}
+                                        height={100}
                                         className="w-full h-full object-cover"
                                       />
                   <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-40 transition-all" />
@@ -405,9 +408,11 @@ function UserRow({
                                       exit={{ opacity: 0, scale: 0.8 }}
                                       className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden"
                                     >
-                                      <img
-                    src={areaImageUrls[image.id]}
+                                      <Image
+                                        src={areaImageUrls[image.id]}
                                         alt={image.name}
+                                        width={100}
+                                        height={100}
                                         className="w-full h-full object-cover"
                                       />
                   <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-40 transition-all" />
@@ -853,7 +858,7 @@ const UserDashboard: React.FC = () => {
             <div className="flex items-center justify-center space-x-8 text-sm">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <Image className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4" />
                 </div>
                 <span>{totalInspiration} Inspirations Uploaded</span>
               </div>
@@ -929,7 +934,7 @@ const UserDashboard: React.FC = () => {
                     <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wide w-8">#</th>
                     <th className="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wide w-1/4">
                       <div className="flex items-center justify-center space-x-2">
-                        <Image className="w-5 h-5" />
+                        <Sparkles className="w-5 h-5" />
                         <span>Inspiration Images</span>
                       </div>
                     </th>
