@@ -2,7 +2,7 @@
 import { storage, db } from '../services/firebaseClient';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
-  collection, doc, setDoc, updateDoc, deleteDoc, getDocs, onSnapshot
+  collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot
 } from 'firebase/firestore';
 import { UserSubmission } from '../types';
 

@@ -16,9 +16,9 @@ export const initializeAuth = async () => {
     const userCredential = await signInWithEmailAndPassword(auth, STATIC_EMAIL, STATIC_PASSWORD);
     currentUser = userCredential.user;
     return currentUser;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Auto login failed:', error);
-    if (error.code === 'auth/invalid-credential') {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as any).code === 'auth/invalid-credential') {
       console.log('Invalid credentials, attempting to create user...');
       return null;
     }

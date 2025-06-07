@@ -12,9 +12,9 @@ export const setupAdminUser = async () => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     console.log('Admin user created successfully:', userCredential.user.uid);
     return userCredential.user;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If user already exists, that's fine
-    if (error.code === 'auth/email-already-in-use') {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as any).code === 'auth/email-already-in-use') {
       console.log('Admin user already exists');
       return null;
     }
