@@ -13,78 +13,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSharedData } from '../../../lib/context/SharedDataContext';
 import { PreviewModal, ProgressBar, StatusBadge, PriorityBadge } from '../../../components/shared/SharedComponents';
 import { UserSubmission } from '../../../lib/types';
-import { get } from 'idb-keyval';
+import { uploadImageToStorage } from '../../../lib/firebaseHelpers';
 
-// Fixed downloadImage function that properly handles blob URLs
-const downloadImage = async (imageUrl: string, filename: string) => {
+// Updated downloadImage function
+const downloadImage = async (url: string, filename: string) => {
   try {
-    let blob: Blob;
+    // Ensure URL is properly formatted
+    const downloadUrl = url.startsWith('http') ? url : `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o/${encodeURIComponent(url)}?alt=media`;
     
-    // Check if it's a blob URL (from IndexedDB)
-    if (imageUrl.startsWith('blob:')) {
-      // Fetch the blob from the blob URL
-      const response = await fetch(imageUrl);
-      blob = await response.blob();
-    } else {
-      // Handle regular URLs (like generated images from server)
-      const response = await fetch(imageUrl);
-      blob = await response.blob();
-    }
-    
-    // Create a new blob URL for download
-    const downloadUrl = window.URL.createObjectURL(blob);
-    
-    // Create download link
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = filename;
-    
-    // Trigger download
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Clean up the download URL after a short delay
-    setTimeout(() => {
-      window.URL.revokeObjectURL(downloadUrl);
-    }, 1000);
-    
-  } catch (error) {
-    console.error('Download failed:', error);
-    // Fallback: try direct link approach
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = filename;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-};
+    const response = await fetch(downloadUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-// Function to download image directly from IndexedDB
-const downloadImageFromIndexedDB = async (imageId: string, filename: string) => {
-  try {
-    const file = await get(imageId);
-    if (file instanceof Blob) {
-      const url = window.URL.createObjectURL(file);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Clean up
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-      }, 1000);
-    } else {
-      console.error('No file found in IndexedDB for id:', imageId);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
+
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
   } catch (error) {
-    console.error('IndexedDB download failed:', error);
+    console.error('Error downloading image:', error);
+    alert('Failed to download image. Please try again.');
   }
 };
 
@@ -147,31 +108,6 @@ const NotesModal: React.FC<NotesModalProps> = ({ submission, onSave, onClose }) 
   );
 };
 
-// Add a hook to get object URLs for a list of image ids
-function useImageObjectUrls(images: { id: string }[]): { [id: string]: string } {
-  const [urls, setUrls] = useState<{ [id: string]: string }>({});
-  useEffect(() => {
-    let isMounted = true;
-    const fetchUrls = async () => {
-      const newUrls: { [id: string]: string } = {};
-      for (const img of images) {
-        const file = await get(img.id);
-        if (file) {
-          newUrls[img.id] = URL.createObjectURL(file);
-        }
-      }
-      if (isMounted) setUrls(newUrls);
-    };
-    fetchUrls();
-    return () => {
-      isMounted = false;
-      Object.values(urls).forEach(url => URL.revokeObjectURL(url));
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [images.map(img => img.id).join(",")]);
-  return urls;
-}
-
 interface AdminSubmissionCardProps {
   submission: UserSubmission;
   index: number;
@@ -193,23 +129,20 @@ function AdminSubmissionCard({
   handleDeleteSubmission,
   setNotesModal
 }: AdminSubmissionCardProps) {
-  const inspirationImageUrls = useImageObjectUrls(submission.inspirationImages);
-  const areaImageUrls = useImageObjectUrls(submission.areaImages);
-
   const handleDownloadAllImages = async () => {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     
-    // Download inspiration images from IndexedDB
+    // Download inspiration images
     for (let i = 0; i < submission.inspirationImages.length; i++) {
       const image = submission.inspirationImages[i];
-      await downloadImageFromIndexedDB(image.id, `inspiration_${i + 1}_${image.name || 'image.jpg'}`);
+      await downloadImage(image.url, `inspiration_${i + 1}_${image.name || 'image.jpg'}`);
       if (i < submission.inspirationImages.length - 1) await delay(200);
     }
     
-    // Download area images from IndexedDB
+    // Download area images
     for (let i = 0; i < submission.areaImages.length; i++) {
       const image = submission.areaImages[i];
-      await downloadImageFromIndexedDB(image.id, `area_${i + 1}_${image.name || 'image.jpg'}`);
+      await downloadImage(image.url, `area_${i + 1}_${image.name || 'image.jpg'}`);
       if (i < submission.areaImages.length - 1) await delay(200);
     }
     
@@ -273,10 +206,10 @@ function AdminSubmissionCard({
                 {submission.inspirationImages.slice(0, 4).map((image) => (
                   <div key={image.id} className="relative group">
                     <img
-                      src={inspirationImageUrls[image.id]}
+                      src={image.url}
                       alt={image.name || 'Inspiration image'}
                       className="w-full h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => setPreviewImage(inspirationImageUrls[image.id])}
+                      onClick={() => setPreviewImage(image.url)}
                     />
                     <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded flex items-center justify-center">
                       <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -286,7 +219,7 @@ function AdminSubmissionCard({
                           className="h-6 w-6 text-white hover:bg-white/20"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setPreviewImage(inspirationImageUrls[image.id]);
+                            setPreviewImage(image.url);
                           }}
                         >
                           <Eye className="w-3 h-3" />
@@ -297,7 +230,7 @@ function AdminSubmissionCard({
                           className="h-6 w-6 text-white hover:bg-white/20"
                           onClick={(e) => {
                             e.stopPropagation();
-                            downloadImageFromIndexedDB(image.id, image.name || 'inspiration.jpg');
+                            downloadImage(image.url, image.name || 'inspiration.jpg');
                           }}
                         >
                           <Download className="w-3 h-3" />
@@ -328,10 +261,10 @@ function AdminSubmissionCard({
                 {submission.areaImages.slice(0, 4).map((image) => (
                   <div key={image.id} className="relative group">
                     <img
-                      src={areaImageUrls[image.id]}
+                      src={image.url}
                       alt={image.name || 'Area image'}
                       className="w-full h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => setPreviewImage(areaImageUrls[image.id])}
+                      onClick={() => setPreviewImage(image.url)}
                     />
                     <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded flex items-center justify-center">
                       <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -341,7 +274,7 @@ function AdminSubmissionCard({
                           className="h-6 w-6 text-white hover:bg-white/20"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setPreviewImage(areaImageUrls[image.id]);
+                            setPreviewImage(image.url);
                           }}
                         >
                           <Eye className="w-3 h-3" />
@@ -352,7 +285,7 @@ function AdminSubmissionCard({
                           className="h-6 w-6 text-white hover:bg-white/20"
                           onClick={(e) => {
                             e.stopPropagation();
-                            downloadImageFromIndexedDB(image.id, image.name || 'area.jpg');
+                            downloadImage(image.url, image.name || 'area.jpg');
                           }}
                         >
                           <Download className="w-3 h-3" />
@@ -575,11 +508,13 @@ const AdminDashboard: React.FC = () => {
     updateSubmission(submissionId, { priority: newPriority });
   };
 
-  const handleUploadGenerated = (submissionId: string, files: FileList) => {
+  const handleUploadGenerated = async (submissionId: string, files: FileList) => {
     if (files.length > 0) {
       const file = files[0];
-      const imageUrl = URL.createObjectURL(file);
-      updateSubmission(submissionId, {
+      const path = `generated/${submissionId}/${file.name}`;
+      const imageUrl = await uploadImageToStorage(file, path);
+
+      await updateSubmission(submissionId, {
         status: 'completed',
         generatedImage: imageUrl,
         completedAt: new Date().toISOString(),

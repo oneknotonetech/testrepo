@@ -9,10 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useSharedData } from '../../lib/context/SharedDataContext';
+import { useSharedData } from '@/lib/context/SharedDataContext';
 import { PreviewModal, ProgressBar, StatusBadge } from '../../components/shared/SharedComponents';
 import { TableRowData, UploadedImage, UserSubmission } from '../../lib/types';
-import { set, get } from 'idb-keyval';
+import { uploadImageToStorage } from '../../lib/firebaseHelpers';
 
 const LOCAL_STORAGE_KEY = 'ai-design-user-rows';
 
@@ -155,92 +155,45 @@ const TokenCounter: React.FC<{
   );
 };
 
-// Fixed downloadImage function that properly handles blob URLs
-const downloadImage = async (imageUrl: string, filename: string) => {
+// Updated downloadImage function
+const downloadImage = async (url: string, filename: string) => {
   try {
-    let blob: Blob;
+    // Ensure URL is properly formatted
+    const downloadUrl = url.startsWith('http') ? url : `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}/o/${encodeURIComponent(url)}?alt=media`;
     
-    if (imageUrl.startsWith('blob:')) {
-      const response = await fetch(imageUrl);
-      blob = await response.blob();
-    } else {
-      const response = await fetch(imageUrl);
-      blob = await response.blob();
+    const response = await fetch(downloadUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
-    
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = filename;
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    setTimeout(() => {
-      window.URL.revokeObjectURL(downloadUrl);
-    }, 1000);
-    
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
   } catch (error) {
-    console.error('Download failed:', error);
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = filename;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    console.error('Error downloading image:', error);
+    alert('Failed to download image. Please try again.');
   }
 };
 
-const downloadImageFromIndexedDB = async (imageId: string, filename: string) => {
-  try {
-    const file = await get(imageId);
-    if (file instanceof Blob) {
-      const url = window.URL.createObjectURL(file);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-      }, 1000);
-    }
-  } catch (error) {
-    console.error('IndexedDB download failed:', error);
-  }
-};
-
-function useImageObjectUrls(images: UploadedImage[]) {
-  const [urls, setUrls] = useState<{ [id: string]: string }>({});
-  const prevUrls = useRef<{ [id: string]: string }>({});
-
-  useEffect(() => {
-    let isMounted = true;
-    const fetchUrls = async () => {
-      const newUrls: { [id: string]: string } = {};
-      for (const img of images) {
-        const file = await get(img.id);
-        if (file) {
-          newUrls[img.id] = URL.createObjectURL(file);
-        }
-      }
-      if (isMounted) {
-        setUrls(newUrls);
-      }
-    };
-    fetchUrls();
-    return () => {
-      isMounted = false;
-      Object.values(prevUrls.current).forEach(url => URL.revokeObjectURL(url));
-      prevUrls.current = urls;
-    };
-  }, [images.map(img => img.id).join(",")]);
-  return urls;
+function useImageUrls(images: UploadedImage[]) {
+  return images.reduce<Record<string, string>>((acc, img) => ({
+    ...acc,
+    [img.id]: img.url
+  }), {});
 }
 
 import React from 'react';
@@ -276,23 +229,23 @@ function UserRow({
   submitForProcessing,
   remainingTokens,
 }: UserRowProps) {
-                      const rowStatus = getRowStatus(row.id);
-                      const submission = getSubmission(row.id);
-  const inspirationImageUrls = useImageObjectUrls(row.inspirationImages);
-  const areaImageUrls = useImageObjectUrls(row.areaImages);
+  const rowStatus = getRowStatus(row.id);
+  const submission = getSubmission(row.id);
+  const inspirationImageUrls = useImageUrls(row.inspirationImages);
+  const areaImageUrls = useImageUrls(row.areaImages);
 
   const handleDownloadAllImages = async () => {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     
     for (let i = 0; i < row.inspirationImages.length; i++) {
       const img = row.inspirationImages[i];
-      await downloadImageFromIndexedDB(img.id, `inspiration-${i + 1}-${img.name}`);
+      await downloadImage(img.url, `inspiration-${i + 1}-${img.name}`);
       if (i < row.inspirationImages.length - 1) await delay(200);
     }
     
     for (let i = 0; i < row.areaImages.length; i++) {
       const img = row.areaImages[i];
-      await downloadImageFromIndexedDB(img.id, `area-${i + 1}-${img.name}`);
+      await downloadImage(img.url, `area-${i + 1}-${img.name}`);
       if (i < row.areaImages.length - 1) await delay(200);
     }
     
@@ -393,7 +346,7 @@ function UserRow({
                       size="icon"
                       variant="ghost"
                       className="h-6 w-6 text-white hover:bg-white/20"
-                      onClick={() => downloadImageFromIndexedDB(image.id, image.name)}
+                      onClick={() => downloadImage(inspirationImageUrls[image.id], image.name)}
                     >
                       <Download className="w-3 h-3" />
                     </Button>
@@ -471,7 +424,7 @@ function UserRow({
                       size="icon"
                       variant="ghost"
                       className="h-6 w-6 text-white hover:bg-white/20"
-                      onClick={() => downloadImageFromIndexedDB(image.id, image.name)}
+                      onClick={() => downloadImage(areaImageUrls[image.id], image.name)}
                     >
                       <Download className="w-3 h-3" />
                     </Button>
@@ -697,37 +650,38 @@ const UserDashboard: React.FC = () => {
   }, [userRows]);
 
   const [draggedCell, setDraggedCell] = useState<{ rowId: number; column: 'inspiration' | 'area' } | null>(null);
-  const userSubmissions = submissions.filter(s => s.userId === 'user1') || [];
+  const userSubmissions = submissions.filter((s: UserSubmission) => s.userId === 'user1') || [];
 
   const handleImageUpload = async (rowId: number, column: 'inspiration' | 'area', files: FileList) => {
-    const newImages: UploadedImage[] = await Promise.all(Array.from(files).map(async (file) => {
-      const id = `${rowId}-${column}-${Date.now()}-${Math.random()}`;
-      await set(id, file);
-      return {
-        id,
-        file,
-        name: file.name,
-        size: file.size,
-        url: '',
-        uploadedAt: new Date().toISOString()
-      };
-    }));
-
-    setUserRows(prev => prev.map(row => {
-      if (row.id === rowId) {
-        const updatedRow = { 
-          ...row,
-          submittedAt: new Date().toISOString()
+    const uploadedImages: UploadedImage[] = await Promise.all(
+      Array.from(files).map(async (file) => {
+        const id = `${rowId}-${column}-${Date.now()}`;
+        const path = `users/user1/submissions/${rowId}/${column}/${file.name}`;
+        const url = await uploadImageToStorage(file, path);
+        return {
+          id,
+          name: file.name,
+          size: file.size,
+          url,
+          uploadedAt: new Date().toISOString(),
         };
-        if (column === 'inspiration') {
-          updatedRow.inspirationImages = [...row.inspirationImages, ...newImages];
-        } else {
-          updatedRow.areaImages = [...row.areaImages, ...newImages];
+      })
+    );
+
+    setUserRows((prev) =>
+      prev.map((row) => {
+        if (row.id === rowId) {
+          const updatedRow = { ...row, submittedAt: new Date().toISOString() };
+          if (column === 'inspiration') {
+            updatedRow.inspirationImages = [...row.inspirationImages, ...uploadedImages];
+          } else {
+            updatedRow.areaImages = [...row.areaImages, ...uploadedImages];
+          }
+          return updatedRow;
         }
-        return updatedRow;
-      }
-      return row;
-    }));
+        return row;
+      })
+    );
   };
 
   const removeImage = (rowId: number, column: 'inspiration' | 'area', imageId: string) => {
@@ -799,7 +753,7 @@ const UserDashboard: React.FC = () => {
   };
 
   const getRowStatus = (rowId: number): 'idle' | 'generating' | 'completed' | 'error' => {
-    const submission = userSubmissions.find(s => s.rowId === rowId);
+    const submission = userSubmissions.find((s: UserSubmission) => s.rowId === rowId);
     if (!submission) return 'idle';
     
     switch (submission.status) {
@@ -816,7 +770,7 @@ const UserDashboard: React.FC = () => {
   };
 
   const getSubmission = (rowId: number): UserSubmission | undefined => {
-    return userSubmissions.find(s => s.rowId === rowId);
+    return userSubmissions.find((s: UserSubmission) => s.rowId === rowId);
   };
 
   const handleDragOver = (e: React.DragEvent, rowId: number, column: 'inspiration' | 'area') => {
@@ -839,7 +793,7 @@ const UserDashboard: React.FC = () => {
 
   const totalInspiration = userRows.reduce((sum, row) => sum + row.inspirationImages.length, 0);
   const totalArea = userRows.reduce((sum, row) => sum + row.areaImages.length, 0);
-  const totalGenerated = userSubmissions.filter(s => s.status === 'completed').length;
+  const totalGenerated = userSubmissions.filter((s: UserSubmission) => s.status === 'completed').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
@@ -944,12 +898,12 @@ const UserDashboard: React.FC = () => {
                     <CardTitle className="text-lg text-blue-900">Your Active Submissions</CardTitle>
                     <p className="text-sm text-blue-700">
                       {userSubmissions.length} total submissions • 
-                      {userSubmissions.filter(s => s.status === 'pending' || s.status === 'in_progress').length} currently processing • 
-                      {userSubmissions.filter(s => s.status === 'completed').length} completed designs ready
+                      {userSubmissions.filter((s: UserSubmission) => s.status === 'pending' || s.status === 'in_progress').length} currently processing • 
+                      {userSubmissions.filter((s: UserSubmission) => s.status === 'completed').length} completed designs ready
                     </p>
                   </div>
                   <Badge className="bg-blue-600 text-white">
-                    {userSubmissions.filter(s => s.status === 'pending' || s.status === 'in_progress').length} In Queue
+                    {userSubmissions.filter((s: UserSubmission) => s.status === 'pending' || s.status === 'in_progress').length} In Queue
                   </Badge>
                 </div>
               </CardHeader>
